@@ -1,0 +1,26 @@
+# Ignore node_modules folder for Service1
+/service1/node_modules
+/service1/package-lock.json
+/service1/yarn.lock
+
+# Ignore Python compiled files for Service2
+/service2/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Ignore Docker image and container-related files
+docker-compose.override.yml
+.dockerignore
+*.log
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore environment files (if you use any)
+.env
+.env.*
+
+# Ignore virtual environment for Python (if created manually)
+/service2/venv/
