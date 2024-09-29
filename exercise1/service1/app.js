@@ -4,7 +4,7 @@ const exec = require('child_process').exec;
 const axios = require('axios');
 
 const app = express();
-const SERVICE2_URL = 'http://localhost:5000/info';
+const SERVICE2_URL = 'http://service2:5000/info';
 
 // Function to get system information
 function getSystemInfo(callback) {

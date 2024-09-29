@@ -1,0 +1,18 @@
+services:
+  service1:
+    build: ./service1
+    ports:
+      - "8199:8199"
+    depends_on:
+      - service2
+    networks:
+      - mynetwork
+
+  service2:
+    build: ./service2
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
