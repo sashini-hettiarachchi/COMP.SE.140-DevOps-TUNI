@@ -1,17 +1,13 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
+FROM python:3.11-slim
 
-# Set the working directory in the container
-WORKDIR /app
-
-# Copy the current directory contents into the container at /app
+# Copy your application code
 COPY . /app
 
-# Install Flask (dependency)
-RUN pip install Flask
+# Set the working directory
+WORKDIR /app
 
-# Expose port 5000 for Service2
-EXPOSE 5000
+# Install dependencies
+RUN pip install -r requirements.txt   
 
-# Run app.py when the container launches
-CMD ["python", "app.py"]
+# Add commands to retrieve process and uptime information and log them
+CMD ["python", "app.py", "&&", "ps", "aux", "&&", "uptime"]
