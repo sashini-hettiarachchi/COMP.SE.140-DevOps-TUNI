@@ -1,0 +1,4 @@
+Looking at the data I got from service 1, 
+I realized that the host file system is accessible to containers, 
+but the containers list their own processes and IP addresses (I used the bridge network option). 
+The uptime shows the container's uptime, not the host's uptime.
