@@ -1,17 +1,49 @@
 services:
-  service1:
+  # Three instances of Service1 with a 2-second delay
+  service1-1:
     build: ./service1
-    ports:
-      - "8199:8199"
-    depends_on:
-      - service2
+    container_name: service1-1
     networks:
       - mynetwork
 
-  service2:
-    build: ./service2
+  service1-2:
+    build: ./service1
+    container_name: service1-2
     networks:
       - mynetwork
+
+  service1-3:
+    build: ./service1
+    container_name: service1-3
+    networks:
+      - mynetwork
+
+  # Service2 remains unchanged
+  service2:
+    build: ./service2
+    container_name: service2
+    networks:
+      - mynetwork
+    ports:
+      - "5000:5000"  # Optional, for direct testing if needed
+
+  # Nginx as the load balancer with basic authentication
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8198:8198"
+    networks:
+      - mynetwork
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd
+      - ./nginx/index.html:/usr/share/nginx/html/index.html
+    depends_on:
+      - service1-1
+      - service1-2
+      - service1-3
+
 
 networks:
   mynetwork:

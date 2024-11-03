@@ -1,16 +1,17 @@
 ## docker container ls output
 
-exercise1 % docker container ls
-CONTAINER ID   IMAGE                COMMAND                  CREATED         STATUS         PORTS                    NAMES
-4b39441eb193   exercise1-service1   "docker-entrypoint.s…"   4 minutes ago   Up 4 minutes   0.0.0.0:8199->8199/tcp   exercise1-service1-1
-27f80cdeb6c9   exercise1-service2   "python app.py && ps…"   4 minutes ago   Up 4 minutes                            exercise1-service2-1
+CONTAINER ID   IMAGE                              COMMAND                  CREATED          STATUS          PORTS                            NAMES
+a4d77afd09ef   nginx:latest                       "/docker-entrypoint.…"   57 seconds ago   Up 56 seconds   80/tcp, 0.0.0.0:8198->8198/tcp   nginx
+b17a4fb8e113   compse140-devops-tuni-service1-3   "docker-entrypoint.s…"   57 seconds ago   Up 56 seconds   8199/tcp                         service1-3
+68d791ac8287   compse140-devops-tuni-service1-1   "docker-entrypoint.s…"   57 seconds ago   Up 56 seconds   8199/tcp                         service1-1
+79c0198bfc7d   compse140-devops-tuni-service1-2   "docker-entrypoint.s…"   57 seconds ago   Up 56 seconds   8199/tcp                         service1-2
+75438ade962b   compse140-devops-tuni-service2     "python app.py && ps…"   3 minutes ago    Up 56 seconds   0.0.0.0:5000->5000/tcp           service2
 
 
 ## docker network ls output
 
-exercise1 % docker network ls 
-NETWORK ID     NAME                  DRIVER    SCOPE
-613aaadfae92   bridge                bridge    local
-401b520195f1   exercise1_mynetwork   bridge    local
-c92251571c3f   host                  host      local
-b7f93b43e171   none                  null      local
+NETWORK ID     NAME                                    DRIVER    SCOPE
+2c81e19e44ed   bridge                                  bridge    local
+48ef7ca3e817   compse140-devops-tuni_mynetwork         bridge    local
+c92251571c3f   host                                    host      local
+b7f93b43e171   none                                    null      local

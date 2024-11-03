@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Service Request Interface</title>
+  <style>
+    #response-area {
+      width: 100%;
+      height: 200px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Service Control Panel</h2>
+  <button id="request-button">REQUEST</button>
+  <button id="stop-button">STOP</button>
+  <textarea id="response-area" placeholder="Response will appear here..." readonly></textarea>
+
+  <script>
+    // Handle REQUEST button click
+    document.getElementById('request-button').addEventListener('click', async () => {
+      try {
+        const response = await fetch('/request');
+        const data = await response.json();
+        document.getElementById('response-area').value = JSON.stringify(data, null, 2);
+      } catch (error) {
+        document.getElementById('response-area').value = "Error fetching data.";
+      }
+    });
+
+    // Handle STOP button click
+    document.getElementById('stop-button').addEventListener('click', async () => {
+      try {
+        await fetch('/stop', { method: 'POST' });
+        alert('System is shutting down.');
+      } catch (error) {
+        alert('Failed to stop the system.');
+      }
+    });
+  </script>
+</body>
+</html>
