@@ -1,7 +1,7 @@
-const express = require('express');
-const os = require('os');
-const exec = require('child_process').exec;
-const axios = require('axios');
+import express from 'express';
+import os from 'os';
+import { exec } from 'child_process';
+import axios from 'axios';
 
 const app = express();
 const SERVICE2_URL = 'http://service2:5000/info';
