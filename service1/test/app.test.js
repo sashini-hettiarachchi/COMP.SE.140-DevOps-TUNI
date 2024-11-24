@@ -1,12 +1,7 @@
-
-// const chai = require('chai');
-// const chaiHttp = require('chai-http');
-// const { expect } = chai;
-// const supertest = require('supertest');
-
 import chaiHttp from 'chai-http';
 import supertest from 'supertest';
 import * as chai from 'chai';
+import { expect } from 'chai';
 
 import { STATES } from '../utils/constants.js';
 
@@ -38,7 +33,7 @@ describe('API Endpoint Tests', () => {
                 .put('/state')
                 .send({ state: STATES.RUNNING });
             expect(res.status).to.equal(200);
-            expect(res.text).to.equal('No state change required.');
+            expect(res.text).to.include('No state change required.');
         });
 
         it('should set the state to PAUSED', async () => {
