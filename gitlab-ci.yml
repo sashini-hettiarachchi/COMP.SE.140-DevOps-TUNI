@@ -1,0 +1,25 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  DOCKER_IMAGE: myapp:latest
+
+build:
+  stage: build
+  script:
+    - docker build -t $DOCKER_IMAGE .
+
+test:
+  stage: test
+  script:
+    - docker-compose up -d
+    - sleep 10 # Allow services to start
+    - docker-compose run --rm tests
+    - docker-compose down
+
+deploy:
+  stage: deploy
+  script:
+    - docker-compose up -d
