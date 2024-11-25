@@ -6,10 +6,6 @@ stages:
 # Define the base image
 image: node:16  # Use Node.js for building and testing
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - node_modules/
 
 default:
   tags: 
@@ -18,10 +14,6 @@ default:
 # Build Stage
 build:
   stage: build
-  before_script:
-    - echo "Checking out the correct branch..."
-    - git fetch origin project  # Fetch the `project` branch explicitly
-    - git checkout project  # Ensure you're on the `project` branch
   script:
     - echo "Starting Build Stage"
     - cd service1
@@ -35,9 +27,6 @@ build:
 test:
   stage: test
   before_script:
-    - echo "Checking out the correct branch..."
-    - git fetch origin project  # Fetch the `project` branch explicitly
-    - git checkout project  # Ensure you're on the `project` branch
     - echo "Installing dependencies..."
     - cd service1
     - npm install
