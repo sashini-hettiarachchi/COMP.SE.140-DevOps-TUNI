@@ -6,10 +6,6 @@ stages:
 # Define the base image
 image: node:16  # Use Node.js for building and testing
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - node_modules/
 
 default:
   tags: 
