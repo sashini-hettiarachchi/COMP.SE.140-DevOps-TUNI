@@ -1,0 +1,60 @@
+stages:
+  - build
+  - test
+  - cleanup
+
+# Define the base image
+image: node:16  # Use Node.js for building and testing
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+
+default:
+  tags: 
+    - node
+
+# Build Stage
+build:
+  stage: build
+  before_script:
+    - echo "Checking out the correct branch..."
+    - git fetch origin project  # Fetch the `project` branch explicitly
+    - git checkout project  # Ensure you're on the `project` branch
+  script:
+    - echo "Starting Build Stage"
+    - cd service1
+    - npm install
+    - echo "Build completed successfully!"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "project"  # Ensure the pipeline runs on the correct branch
+    - if: $CI_PIPELINE_SOURCE == "push"  # Allow jobs triggered by a push event
+
+# Test Stage
+test:
+  stage: test
+  before_script:
+    - echo "Checking out the correct branch..."
+    - git fetch origin project  # Fetch the `project` branch explicitly
+    - git checkout project  # Ensure you're on the `project` branch
+    - echo "Installing dependencies..."
+    - cd service1
+    - npm install
+  script:
+    - echo "Running Tests"
+    - npx mocha
+  rules:
+    - if: $CI_COMMIT_BRANCH == "project"  # Ensure the pipeline runs on the correct branch
+    - if: $CI_PIPELINE_SOURCE == "push"  # Allow jobs triggered by a push event
+
+# Cleanup Stage (Optional)
+cleanup:
+  stage: cleanup
+  script:
+    - echo "Stopping old Docker containers"
+    - docker compose down || true
+  when: manual  # Manual trigger required for cleanup
+  rules:
+    - if: $CI_COMMIT_BRANCH == "project"  # Ensure the pipeline runs on the correct branch
+    - if: $CI_PIPELINE_SOURCE == "push"  # Allow jobs triggered by a push event
