@@ -3,7 +3,7 @@ import os from "os";
 import { exec } from "child_process";
 import axios from "axios";
 import { STATES } from "./utils/constants.js";
-import { logStateChange } from "./utils/utils.js";
+import { updateState } from "./controller/stateController.js";
 
 const app = express();
 const SERVICE2_URL = "http://service2:5000/info";
@@ -102,75 +102,20 @@ app.post("/stop", (req, res) => {
   });
 });
 
-// In-memory storage for current state and logs
-let currentState = STATES.INIT; // Default state
-
-// Route to handle state changes
-app.put("/state", express.json(), (req, res) => {
+app.put("/state", (req, res) => {
   const { state: newState } = req.body;
 
-  // Validate the input state
-  const validStates = [
-    STATES.INIT,
-    STATES.PAUSED,
-    STATES.RUNNING,
-    STATES.SHUTDOWN,
-  ];
-  if (!validStates.includes(newState)) {
-    return res.status(400).json({ error: "Invalid transition" });
-  }
-
-  // Handle special case: if the new state is the same as the current state
-  if (newState === currentState) {
-    return res
-      .status(200)
-      .json({ message: "No state change required.", state: currentState });
-  }
-
-  // Handle state transitions
-  switch (newState) {
-    case STATES.INIT:
-      // Reset everything except log information
-      currentState = STATES.INIT;
-      logStateChange(STATES.INIT);
-      return res
-        .status(200)
-        .json({ message: "State updated to INIT", state: currentState });
-
-    case STATES.PAUSED:
-      currentState = STATES.PAUSED;
-      logStateChange(STATES.PAUSED);
-      return res
-        .status(200)
-        .json({ message: "State updated to PAUSED.", state: currentState });
-
-    case STATES.RUNNING:
-      currentState = STATES.RUNNING;
-      logStateChange(STATES.RUNNING);
-      return res
-        .status(200)
-        .json({ message: "State updated to RUNNING", state: currentState });
-
-    case STATES.SHUTDOWN:
-      logStateChange(STATES.SHUTDOWN);
-      currentState = STATES.SHUTDOWN;
-      // Simulate shutting down containers
-      exec("docker compose down", (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error shutting down containers: ${error.message}`);
-        }
-        console.log("Docker containers stopped.");
-      });
-      return res
-        .status(200)
-        .json({ message: "State updated to SHUTDOWN.", state: currentState });
-
-    default:
-      // Should never reach here due to validation
-      return res.status(500).json({ error: "Unknown error occurred." });
+  try {
+    // Update the state using the controller function
+    const result = updateState(newState);
+    return res.status(200).json(result); // Send the result as JSON
+  } catch (error) {
+    if (error.message === "Invalid transition") {
+      return res.status(400).json({ error: "Invalid transition" });
+    }
+    return res.status(500).json({ error: error.message });
   }
 });
-
 // Start server on port 8199
 app.listen(8199, () => {
   console.log("Service1 running on port 8199");
