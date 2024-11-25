@@ -70,4 +70,20 @@ describe("State Controller Tests", () => {
       }
     });
   });
+  describe("setCurrentState function", () => {
+    it("should set the current state to the provided state", () => {
+      const newState = STATES.PAUSED;
+      stateController.setCurrentState(newState);
+
+      expect(stateController.getCurrentState()).to.equal(newState);
+    });
+  });
+  describe("getCurrentState function", () => {
+    it("should return the current state", () => {
+      const currentState = stateController.getCurrentState();
+
+      expect(stateController.getCurrentState()).to.equal(currentState);
+    });
+    
+  });
 });

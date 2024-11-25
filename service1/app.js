@@ -2,8 +2,7 @@ import express from "express";
 import os from "os";
 import { exec } from "child_process";
 import axios from "axios";
-import { STATES } from "./utils/constants.js";
-import { updateState } from "./controller/stateController.js";
+import { updateState, getCurrentState } from "./controller/stateController.js";
 
 const app = express();
 const SERVICE2_URL = "http://service2:5000/info";
@@ -116,6 +115,16 @@ app.put("/state", (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+app.get("/state", (req, res) => {
+  try {
+    const state = getCurrentState();
+    res.status(200).type("text/plain").send(state);
+  } catch (error) {
+    res.status(500).send("An error occurred while retrieving state.");
+  }
+});
+
 // Start server on port 8199
 app.listen(8199, () => {
   console.log("Service1 running on port 8199");
