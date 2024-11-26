@@ -1,5 +1,4 @@
 import express from "express";
-import os from "os";
 import { exec } from "child_process";
 import axios from "axios";
 import {
@@ -7,90 +6,54 @@ import {
   getCurrentState,
   getStateLog,
 } from "./controller/stateController.js";
+import { getSystemInfo } from "./utils/utils.js";
 
 const app = express();
 app.use(express.json());
 const SERVICE2_URL = "http://service2:5000/info";
 
-// Function to get system information
-function getSystemInfo(callback) {
-  // Get IP address
-  let ipAddress =
-    Object.values(os.networkInterfaces())
-      .flat()
-      .find((iface) => iface.family === "IPv4" && !iface.internal)?.address ||
-    "N/A";
-
-  // Get running processes
-  exec("ps -ax", (err, stdout) => {
-    const processes = stdout || "Error fetching processes";
-
-    // Get available disk space
-    exec("df -h /", (err, stdout) => {
-      const diskSpace = stdout || "Error fetching disk space";
-      // Get uptime
-      exec("uptime", (err, stdout) => {
-        const uptime = stdout.trim() || "Error fetching uptime";
-
-        callback({
-          ip_address: ipAddress,
-          processes: processes,
-          disk_space: diskSpace,
-          uptime: uptime,
-        });
-      });
-    });
-  });
-}
-
-// Route to get info for both Service1 and Service2
-app.get("/", async (req, res) => {
-  getSystemInfo(async (service1Info) => {
-    // Fetch information from Service2
-    try {
-      const service2Response = await axios.get(SERVICE2_URL);
-      const service2Info = service2Response.data;
-
-      res.json({
-        Service1: service1Info,
-        Service2: service2Info,
-      });
-    } catch (error) {
-      res.json({
-        Service1: service1Info,
-        Service2: { error: "Could not retrieve Service2 information" },
-      });
-    }
-
-    // Delay response by 2 seconds before handling the next request
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-  });
-});
-
 app.get("/request", async (req, res) => {
   getSystemInfo(async (service1Info) => {
     let service2Info;
+
     try {
-      // Fetch information from Service2
       const service2Response = await axios.get(SERVICE2_URL);
-      service2Info = service2Response.data;
+      const data = service2Response.data;
+
+      // Normalize Service2 data to match the format
+      service2Info = {
+        ip_address: data.ip_address || "N/A",
+        processes: data.processes || [],
+        disk_space: data.disk_space || "N/A",
+        uptime: data.uptime || "N/A",
+      };
     } catch (error) {
-      service2Info = { error: "Could not retrieve Service2 information" };
+      service2Info = {
+        ip_address: "N/A",
+        processes: [],
+        disk_space: "Error fetching Service2 disk space",
+        uptime: "Error fetching Service2 uptime",
+      };
     }
 
-    // Format the combined information into plain text
+    // Respond in plain text format
     const responseText = `
 Service1 Info:
-${JSON.stringify(service1Info, null, 2)}
+IP Address: ${service1Info.ip_address}
+Processes: ${JSON.stringify(service1Info.processes, null, 2)}
+Disk Space: ${service1Info.disk_space}
+Uptime (seconds): ${service1Info.uptime}
 
 Service2 Info:
-${JSON.stringify(service2Info, null, 2)}
+IP Address: ${service2Info.ip_address}
+Processes: ${JSON.stringify(service2Info.processes, null, 2)}
+Disk Space: ${service2Info.disk_space}
+Uptime (seconds): ${service2Info.uptime}
     `.trim();
 
-    // Delay the response by 2 seconds
+    // Add 2-second artificial delay
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Respond with plain text
     res.status(200).type("text/plain").send(responseText);
   });
 });
