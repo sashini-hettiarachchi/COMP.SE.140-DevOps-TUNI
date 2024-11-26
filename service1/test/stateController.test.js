@@ -84,6 +84,13 @@ describe("State Controller Tests", () => {
 
       expect(stateController.getCurrentState()).to.equal(currentState);
     });
-    
+  });
+
+  describe("getStateLog function", () => {
+    it("should return the state log", () => {
+      const stateLog = stateController.getStateLog();
+
+      expect(stateLog).to.be.an("array");
+    });
   });
 });

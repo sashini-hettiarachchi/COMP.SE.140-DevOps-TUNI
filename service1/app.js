@@ -2,9 +2,14 @@ import express from "express";
 import os from "os";
 import { exec } from "child_process";
 import axios from "axios";
-import { updateState, getCurrentState } from "./controller/stateController.js";
+import {
+  updateState,
+  getCurrentState,
+  getStateLog,
+} from "./controller/stateController.js";
 
 const app = express();
+app.use(express.json());
 const SERVICE2_URL = "http://service2:5000/info";
 
 // Function to get system information
@@ -62,28 +67,31 @@ app.get("/", async (req, res) => {
   });
 });
 
-// Route to get info for both Service1 and Service2
 app.get("/request", async (req, res) => {
   getSystemInfo(async (service1Info) => {
-    // Fetch information from Service2
+    let service2Info;
     try {
+      // Fetch information from Service2
       const service2Response = await axios.get(SERVICE2_URL);
-      const service2Info = service2Response.data;
-
-      // Respond with combined information
-      res.json({
-        Service1: service1Info,
-        Service2: service2Info,
-      });
+      service2Info = service2Response.data;
     } catch (error) {
-      res.json({
-        Service1: service1Info,
-        Service2: { error: "Could not retrieve Service2 information" },
-      });
+      service2Info = { error: "Could not retrieve Service2 information" };
     }
 
-    // Delay response by 2 seconds
+    // Format the combined information into plain text
+    const responseText = `
+Service1 Info:
+${JSON.stringify(service1Info, null, 2)}
+
+Service2 Info:
+${JSON.stringify(service2Info, null, 2)}
+    `.trim();
+
+    // Delay the response by 2 seconds
     await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Respond with plain text
+    res.status(200).type("text/plain").send(responseText);
   });
 });
 
@@ -122,6 +130,15 @@ app.get("/state", (req, res) => {
     res.status(200).type("text/plain").send(state);
   } catch (error) {
     res.status(500).send("An error occurred while retrieving state.");
+  }
+});
+
+app.get("/run-log", (req, res) => {
+  try {
+    const log = getStateLog();
+    res.status(200).type("text/plain").send(log.join("\n"));
+  } catch (error) {
+    res.status(500).send("An error occurred while retrieving the state log.");
   }
 });
 

@@ -1,8 +1,6 @@
-const stateLog = [];
+export const stateLog = [];
 // Helper function to log state changes
-export const logStateChange = (newState) => {
-    stateLog.push({
-        timestamp: new Date().toISOString(),
-        state: newState
-    });
+export const logStateChange = (oldState, newState) => {
+    const timestamp = new Date().toISOString();
+    stateLog.push(`${timestamp}: ${oldState}->${newState}`);
 }
