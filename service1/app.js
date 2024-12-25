@@ -66,6 +66,60 @@ Uptime (seconds): ${service2Info.uptime}
   });
 });
 
+app.get("/", async (req, res) => {
+  const currentState = await getCurrentState();
+  if (currentState !== "RUNNING") {
+    return res
+      .status(503)
+      .send("System is not in RUNNING state. Please try again later.");
+  }
+
+  getSystemInfo(async (service1Info) => {
+    let service2Info;
+
+    try {
+      const service2Response = await axios.get(SERVICE2_URL);
+      const data = service2Response.data;
+
+      // Normalize Service2 data to match the format
+      service2Info = {
+        ip_address: data.ip_address || "N/A",
+        processes: data.processes || [],
+        disk_space: data.disk_space || "N/A",
+        uptime: data.uptime || "N/A",
+      };
+    } catch (error) {
+      service2Info = {
+        ip_address: "N/A",
+        processes: [],
+        disk_space: "Error fetching Service2 disk space",
+        uptime: "Error fetching Service2 uptime",
+      };
+    }
+
+    // Respond in plain text format
+    const responseText = `
+Service1 Info:
+IP Address: ${service1Info.ip_address}
+Processes: ${JSON.stringify(service1Info.processes, null, 2)}
+Disk Space: ${service1Info.disk_space}
+Uptime (seconds): ${service1Info.uptime}
+
+Service2 Info:
+IP Address: ${service2Info.ip_address}
+Processes: ${JSON.stringify(service2Info.processes, null, 2)}
+Disk Space: ${service2Info.disk_space}
+Uptime (seconds): ${service2Info.uptime}
+    `.trim();
+
+    // Add 2-second artificial delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    res.status(200).type("text/plain").send(responseText);
+  });
+});
+
+
 app.post("/stop", async (req, res) => {
   const currentState = await getCurrentState();
   if (currentState === "SHUTDOWN") {
