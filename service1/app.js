@@ -1,18 +1,26 @@
 import express from "express";
-import { exec } from "child_process";
 import axios from "axios";
 import {
   updateState,
   getCurrentState,
   getStateLog,
 } from "./controller/stateController.js";
-import { getSystemInfo } from "./utils/utils.js";
+import { getSystemInfo, startDockerContainers } from "./utils/utils.js";
+import { setCurrentStateInDB, logStateChangeToDB , connectToDB} from "./utils/mongo.js";
 
 const app = express();
-app.use(express.json());
+app.use(express.text());
+
 const SERVICE2_URL = "http://service2:5000/info";
 
 app.get("/request", async (req, res) => {
+  const currentState = await getCurrentState();
+  if (currentState !== "RUNNING") {
+    return res
+      .status(503)
+      .send("System is not in RUNNING state. Please try again later.");
+  }
+
   getSystemInfo(async (service1Info) => {
     let service2Info;
 
@@ -58,54 +66,107 @@ Uptime (seconds): ${service2Info.uptime}
   });
 });
 
-app.post("/stop", (req, res) => {
-  res.send("Shutting down all services...");
+app.post("/stop", async (req, res) => {
+  const currentState = await getCurrentState();
+  if (currentState === "SHUTDOWN") {
+    return res.status(400).send("System is already in SHUTDOWN state.");
+  }
+  startDockerContainers();
+  res.status(200).send("Shutting down all services...");
   console.log("Received stop request, shutting down Docker containers.");
+});
 
-  // Execute Docker command to shut down all containers
-  exec("docker compose down", (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error shutting down: ${error.message}`);
-      return;
+app.all("/state", async (req, res) => {
+  if (req.method === "GET") {
+    const currentState = await getCurrentState();
+    try {
+      res
+        .status(200)
+        .type("text/plain")
+        .send(`current state is ${currentState}`);
+    } catch (error) {
+      console.error("Error retrieving state:", error.message);
+      res
+        .status(500)
+        .type("text/plain")
+        .send("An error occurred while retrieving state.");
     }
-    console.log("Docker containers stopped.");
-  });
-});
+  }
+  if (req.method === "PUT") {
+    const newState = req.body;
 
-app.put("/state", (req, res) => {
-  const { state: newState } = req.body;
-
-  try {
-    // Update the state using the controller function
-    const result = updateState(newState);
-    return res.status(200).json(result); // Send the result as JSON
-  } catch (error) {
-    if (error.message === "Invalid transition") {
-      return res.status(400).json({ error: "Invalid transition" });
+    if (!newState) {
+      return res.status(400).type("text/plain").send("State must be provided.");
     }
-    return res.status(500).json({ error: error.message });
+
+    try {
+      const result = updateState(newState);
+      return res.status(200).type("text/plain").send(result);
+    } catch (error) {
+      if (error.message === "Invalid transition") {
+        return res.status(400).type("text/plain").send("Invalid transition.");
+      }
+      console.error("Error updating state:", error.message);
+      return res.status(500).type("text/plain").send(error.message);
+    }
   }
+
+  res.status(405).type("text/plain").send("Method Not Allowed");
 });
 
-app.get("/state", (req, res) => {
+app.get("/run-log", async (req, res) => {
   try {
-    const state = getCurrentState();
-    res.status(200).type("text/plain").send(state);
+    const log = await getStateLog(); // Get logs from MongoDB
+    if (log.length === 0) {
+      return res
+        .status(200)
+        .type("text/plain")
+        .send("No state changes logged yet.");
+    }
+    res.status(200).type("text/plain").send(log);
   } catch (error) {
-    res.status(500).send("An error occurred while retrieving state.");
-  }
-});
-
-app.get("/run-log", (req, res) => {
-  try {
-    const log = getStateLog();
-    res.status(200).type("text/plain").send(log.join("\n"));
-  } catch (error) {
+    console.error("Error retrieving state log:", error);
     res.status(500).send("An error occurred while retrieving the state log.");
   }
 });
 
-// Start server on port 8199
-app.listen(8199, () => {
-  console.log("Service1 running on port 8199");
-});
+// Initialize state and start containers
+const initializeState = async () => {
+  try {
+    // Start the Docker containers and set state to INIT in DB
+    const containersStarted = await startDockerContainers();
+
+    if (containersStarted) {
+      await setCurrentStateInDB("RUNNING"); // Set state to RUNNING in MongoDB
+      await logStateChangeToDB("INIT", "RUNNING"); // Log state change
+      console.log("State initialized to INIT after containers started.");
+    } else {
+      console.error("Failed to start Docker containers.");
+    }
+  } catch (error) {
+    console.error("Error during initialization:", error);
+  }
+};
+
+// // Call initializeState during app startup to ensure containers are up and state is set
+// initializeState();
+
+// Assuming connectToDB is an async function that establishes the DB connection
+async function startServer() {
+  try {
+    // Wait for DB connection
+    await connectToDB();
+    // Start the server after a successful DB connection
+    app.listen(8199, () => {
+      console.log('Server is running on port 8199');
+    });
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    // Retry after 5 seconds if DB connection fails
+    setTimeout(startServer, 5000);
+  }
+}
+
+// Call startServer to initiate the connection and server start
+startServer();
+

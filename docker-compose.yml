@@ -5,18 +5,30 @@ services:
     container_name: service1-1
     networks:
       - mynetwork
+    command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay
+    depends_on:
+      - db
+    restart: always
 
   service1-2:
     build: ./service1
     container_name: service1-2
     networks:
       - mynetwork
+    command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay
+    depends_on:
+      - db
+    restart: always
 
   service1-3:
     build: ./service1
     container_name: service1-3
     networks:
       - mynetwork
+    command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay
+    depends_on:
+      - db
+    restart: always
 
   # Service2 remains unchanged
   service2:
@@ -24,15 +36,15 @@ services:
     container_name: service2
     networks:
       - mynetwork
-    ports:
-      - "5000:5000"  # Optional, for direct testing if needed
+    depends_on:
+      - db
+    restart: always
 
-  # Nginx as the load balancer with basic authentication
   nginx:
     image: nginx:latest
     container_name: nginx
     ports:
-      - "8198:8198"
+      - "8197:8197"
     networks:
       - mynetwork
     volumes:
@@ -43,8 +55,26 @@ services:
       - service1-1
       - service1-2
       - service1-3
+    restart: on-failure
 
+  # Database Service (MongoDB)
+  db:
+    image: mongo:latest
+    container_name: mongo-db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=mydatabase
+    networks:
+      - mynetwork
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"  # Expose the database port
 
 networks:
   mynetwork:
     driver: bridge
+
+volumes:
+  mongodb-data:  # Create a volume for MongoDB data persistence

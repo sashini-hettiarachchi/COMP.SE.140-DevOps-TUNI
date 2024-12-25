@@ -21,7 +21,7 @@
     // Handle REQUEST button click
     document.getElementById('request-button').addEventListener('click', async () => {
       try {
-        const response = await fetch('/request');
+        const response = await fetch('http://service1/request');
         const data = await response.json();
         document.getElementById('response-area').value = JSON.stringify(data, null, 2);
       } catch (error) {
@@ -32,7 +32,7 @@
     // Handle STOP button click
     document.getElementById('stop-button').addEventListener('click', async () => {
       try {
-        await fetch('/stop', { method: 'POST' });
+        await fetch('http://service1/stop', { method: 'POST' });
         alert('System is shutting down.');
       } catch (error) {
         alert('Failed to stop the system.');

@@ -1,19 +1,15 @@
 import { STATES } from "../utils/constants.js";
-import { exec } from "child_process";
-import { logStateChange, stateLog } from "../utils/utils.js";
+import {
+  logStateChangeToDB,
+  getCurrentStateFromDB,
+  getStateLogsFromDB,
+} from "../utils/mongo.js"; // Use the MongoDB utility functions
 
-// Store the current state (you might want to manage this in a more persistent way)
-let currentState = STATES.INIT;
+// Store the current state (still in-memory for simplicity, can also be stored in DB)
+let currentState = (await getCurrentStateFromDB()) || "INIT";
 
-export const setCurrentState = (state) => {
-  currentState = state;
-};
-
-export const getCurrentState = () => {
-  return currentState;
-};
 // Function to handle state updates
-export const updateState = (newState) => {
+export const updateState = async (newState) => {
   // Validate the input state
   const validStates = [
     STATES.INIT,
@@ -23,46 +19,74 @@ export const updateState = (newState) => {
   ];
 
   if (!validStates.includes(newState)) {
-    throw new Error("Invalid transition");
+    return "Invalid transition";
   }
 
   // Handle special case: if the new state is the same as the current state
   if (newState === currentState) {
-    return { message: "No state change required.", state: currentState };
+    return `No state change required. Current state is : ${currentState}`;
   }
 
-  logStateChange(currentState, newState);
-  // Handle state transitions
-  switch (newState) {
-    case STATES.INIT:
-      currentState = STATES.INIT;
-      return { message: "State updated to INIT", state: currentState };
+  // Log state change to MongoDB
+  await logStateChangeToDB(currentState, newState);
 
-    case STATES.PAUSED:
-      currentState = STATES.PAUSED;
-      return { message: "State updated to PAUSED", state: currentState };
+  // Handle state transitions based on the current state
+  switch (currentState) {
+    // case "":
+    //   if (newState === STATES.INIT) {
+    //     currentState = STATES.INIT;
+    //     const result = await startDockerContainers();
+    //     if (result) {
+    //       currentState = STATES.RUNNING;
+    //     }
+    //     return `State updated to INIT. Current state is : ${currentState}`;
+    //   }
+
+    // case STATES.INIT:
+    //   if (newState === STATES.RUNNING) {
+    //     currentState = STATES.RUNNING;
+    //     return `State updated to RUNNING. Current state is : ${currentState}`;
+    //   } else {
+    //     return "Invalid transition from INIT state";
+    //   }
 
     case STATES.RUNNING:
-      currentState = STATES.RUNNING;
-      return { message: "State updated to RUNNING", state: currentState };
+      if (newState === STATES.PAUSED || newState === STATES.SHUTDOWN) {
+        currentState = newState;
+        if (newState === STATES.SHUTDOWN) {
+          stopDockerContainers();
+        }
+        return `State updated to ${newState}. Current state is : ${currentState}`;
+      } else {
+        return "Invalid transition from RUNNING state";
+      }
+
+    case STATES.PAUSED:
+      if (newState === STATES.RUNNING) {
+        currentState = STATES.RUNNING;
+        return `State updated to RUNNING. Current state is : ${currentState}`;
+      } else {
+        return "Invalid transition from PAUSED state";
+      }
 
     case STATES.SHUTDOWN:
-      currentState = STATES.SHUTDOWN;
-      // Simulate shutting down containers
-      exec("docker compose down", (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error shutting down containers: ${error.message}`);
-        }
-        console.log("Docker containers stopped.");
-      });
-      return { message: "State updated to SHUTDOWN", state: currentState };
+      if (newState === STATES.INIT) {
+        currentState = STATES.INIT;
+        return `State updated to INIT. Current state is : ${currentState}`;
+      } else {
+        return "Invalid transition from SHUTDOWN state";
+      }
 
     default:
-      // Should never reach here due to validation
-      throw new Error("Unknown error occurred");
+      return "Unknown error occurred";
   }
 };
 
-export const getStateLog = () => {
-  return stateLog;
+export const getStateLog = async () => {
+  const logs = await getStateLogsFromDB();
+  return logs
+    .map((log) => `${log.timestamp}: ${log.oldState} -> ${log.newState}`)
+    .join("\n");
 };
+
+export const getCurrentState = async () => await getCurrentStateFromDB();
