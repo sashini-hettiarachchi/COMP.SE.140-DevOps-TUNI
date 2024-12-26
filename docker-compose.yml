@@ -58,6 +58,28 @@ services:
         - service1-2
         - service1-3
 
+  # webserver:
+  #   image: nginx:latest
+  #   container_name: webserver
+  #   ports:
+  #     - "8198:8198" # Frontend web server
+  #   volumes:
+  #     - ./nginx/web-server.conf:/etc/nginx/nginx.conf
+  #     - ./nginx/index.html:/usr/share/nginx/html/index.html
+
+  # apigateway:
+  #   image: nginx:latest
+  #   container_name: apigateway
+  #   ports:
+  #     - "8197:8197" # API Gateway port
+  #   volumes:
+  #     - ./nginx/api-gateway.conf:/etc/nginx/nginx.conf
+  #     - ./nginx/.htpasswd:/etc/nginx/.htpasswd
+  #   depends_on:
+  #     - service1-1
+  #     - service1-2
+  #     - service1-3
+
 
   # Database Service (MongoDB)
   db:

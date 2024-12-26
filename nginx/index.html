@@ -21,9 +21,9 @@
     // Handle REQUEST button click
     document.getElementById('request-button').addEventListener('click', async () => {
       try {
-        const response = await fetch('http://service1/request');
-        const data = await response.json();
-        document.getElementById('response-area').value = JSON.stringify(data, null, 2);
+        const response = await fetch('/request');
+        const data = await response.text();
+        document.getElementById('response-area').value = data;
       } catch (error) {
         document.getElementById('response-area').value = "Error fetching data.";
       }
@@ -32,7 +32,7 @@
     // Handle STOP button click
     document.getElementById('stop-button').addEventListener('click', async () => {
       try {
-        await fetch('http://service1/stop', { method: 'POST' });
+        await fetch('/stop', { method: 'POST' });
         alert('System is shutting down.');
       } catch (error) {
         alert('Failed to stop the system.');
