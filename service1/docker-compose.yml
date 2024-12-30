@@ -3,8 +3,6 @@ services:
   service1-1:
     build: ./service1
     container_name: service1-1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - mynetwork
     command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay
@@ -15,8 +13,6 @@ services:
   service1-2:
     build: ./service1
     container_name: service1-2
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - mynetwork
     command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay
@@ -27,8 +23,6 @@ services:
   service1-3:
     build: ./service1
     container_name: service1-3
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - mynetwork
     command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay

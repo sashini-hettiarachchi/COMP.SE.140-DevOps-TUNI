@@ -1,18 +1,11 @@
 import express from "express";
 import axios from "axios";
+import { getSystemInfo, updateState } from "./utils/utils.js";
 import {
-  updateState,
   getCurrentState,
-  getStateLog,
-} from "./controller/stateController.js";
-import { getSystemInfo, startDockerContainers } from "./utils/utils.js";
-import {
-  setCurrentStateInDB,
-  logStateChangeToDB,
-  connectToDB,
-  getStateLogsFromDB,
-  initializeState
+  getStateLogs,
 } from "./utils/mongo.js";
+import { initializeState } from "./utils/initializer.js";
 
 const app = express();
 app.use(express.text(), express.json());
@@ -26,6 +19,8 @@ app.get("/request", async (req, res) => {
       .status(503)
       .send("System is not in RUNNING state. Please try again later.");
   }
+
+  console.log("Received request for system info.");
 
   getSystemInfo(async (service1Info) => {
     let service2Info;
@@ -106,7 +101,7 @@ app.all("/state", async (req, res) => {
     }
 
     try {
-      const result = updateState(newState);
+      const result = await updateState(newState);
       return res.status(200).type("text/plain").send(result);
     } catch (error) {
       if (error.message === "Invalid transition") {
@@ -122,7 +117,7 @@ app.all("/state", async (req, res) => {
 
 app.get("/run-log", async (req, res) => {
   try {
-    const log = await getStateLog(); // Get logs from MongoDB
+    const log = await getStateLogs();
     if (log.length === 0) {
       return res
         .status(200)
@@ -136,22 +131,16 @@ app.get("/run-log", async (req, res) => {
   }
 });
 
-// Assuming connectToDB is an async function that establishes the DB connection
-async function startServer() {
+const startServer = async () => {
   try {
-  
-    initializeState();
-
-    // Start the server after a successful DB connection
-    app.listen(8199, () => {
-      console.log("Server is running on port 8199");
-    });
+    await initializeState();
+    app.listen(8199, () => console.log("Server is running on port 8199"));
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
-    // Retry after 5 seconds if DB connection fails
-    setTimeout(startServer, 5000);
+    console.error("Failed to start server:", error);
+    setTimeout(startServer, 5000); // Retry on failure
   }
-}
+};
 
-// Call startServer to initiate the connection and server start
+
 startServer();
+
