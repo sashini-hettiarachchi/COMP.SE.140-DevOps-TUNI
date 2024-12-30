@@ -2,6 +2,7 @@ import os, { release } from "os";
 import { exec } from "child_process";
 import { acquireLock, getCurrentState, saveStateChange } from "./mongo.js";
 import { STATES } from "./constants.js";
+import { pausedSystem,reInitialize,runningSystem,stopSystem } from "./dockerUtil.js";
 
 // Function to parse processes from the `ps -ax` command to a structured format
 const parseProcesses = (processOutput) => {
@@ -146,62 +147,62 @@ export const updateState = async (newState) => {
   }
 };
 
-const executeCommand = (command) => {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error executing command: ${stderr}`);
-        reject(error);
-      } else {
-        console.log(stdout);
-        resolve(stdout);
-      }
-    });
-  });
-};
+// const executeCommand = (command) => {
+//   return new Promise((resolve, reject) => {
+//     exec(command, (error, stdout, stderr) => {
+//       if (error) {
+//         console.error(`Error executing command: ${stderr}`);
+//         reject(error);
+//       } else {
+//         console.log(stdout);
+//         resolve(stdout);
+//       }
+//     });
+//   });
+// };
 
-// Reinitialize the system: Stops and removes containers, then starts them fresh
-const reInitialize = async () => {
-  console.log("Reinitializing system...");
-  try {
-    await executeCommand("docker compose down");
-    await executeCommand("docker compose up -d");
-    console.log("System reinitialized.");
-  } catch (error) {
-    console.error("Failed to reinitialize system:", error.message);
-  }
-};
+// // Reinitialize the system: Stops and removes containers, then starts them fresh
+// const reInitialize = async () => {
+//   console.log("Reinitializing system...");
+//   try {
+//     await executeCommand("docker compose down");
+//     await executeCommand("docker compose up -d");
+//     console.log("System reinitialized.");
+//   } catch (error) {
+//     console.error("Failed to reinitialize system:", error.message);
+//   }
+// };
 
-// Pause all containers
-const pausedSystem = async () => {
-  console.log("Pausing system...");
-  try {
-    await executeCommand("docker compose pause");
-    console.log("System paused.");
-  } catch (error) {
-    console.error("Failed to pause system:", error.message);
-  }
-};
+// // Pause all containers
+// const pausedSystem = async () => {
+//   console.log("Pausing system...");
+//   try {
+//     await executeCommand("docker compose pause");
+//     console.log("System paused.");
+//   } catch (error) {
+//     console.error("Failed to pause system:", error.message);
+//   }
+// };
 
-// Resume running all containers
-const runningSystem = async () => {
-  console.log("Resuming system...");
-  try {
-    await executeCommand("docker compose unpause");
-    console.log("System running.");
-  } catch (error) {
-    console.error("Failed to resume system:", error.message);
-  }
-};
+// // Resume running all containers
+// const runningSystem = async () => {
+//   console.log("Resuming system...");
+//   try {
+//     await executeCommand("docker compose unpause");
+//     console.log("System running.");
+//   } catch (error) {
+//     console.error("Failed to resume system:", error.message);
+//   }
+// };
 
-// Stop all containers
-const stopSystem = async () => {
-  console.log("Stopping system...");
-  try {
-    await executeCommand("docker compose stop");
-    console.log("System stopped.");
-  } catch (error) {
-    console.error("Failed to stop system:", error.message);
-  }
-};
+// // Stop all containers
+// const stopSystem = async () => {
+//   console.log("Stopping system...");
+//   try {
+//     await executeCommand("docker compose stop");
+//     console.log("System stopped.");
+//   } catch (error) {
+//     console.error("Failed to stop system:", error.message);
+//   }
+// };
 

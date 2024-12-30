@@ -1,5 +1,4 @@
 services:
-  # Three instances of Service1 with a 2-second delay
   service1-1:
     build: ./service1
     container_name: service1-1
@@ -7,10 +6,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - mynetwork
-    command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay
+    command: /bin/sh -c "sleep 2 && npm start"
     depends_on:
       - db
     restart: always
+    user: root
 
   service1-2:
     build: ./service1
@@ -19,10 +19,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - mynetwork
-    command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay
+    command: /bin/sh -c "sleep 2 && npm start"
     depends_on:
       - db
     restart: always
+    user: root
 
   service1-3:
     build: ./service1
@@ -31,12 +32,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - mynetwork
-    command: /bin/sh -c "sleep 2 && npm start"  # Add 2-second delay
+    command: /bin/sh -c "sleep 2 && npm start"
     depends_on:
       - db
     restart: always
+    user: root
 
-  # Service2 remains unchanged
   service2:
     build: ./service2
     container_name: service2
@@ -49,45 +50,21 @@ services:
       - "5000:5000"
 
   nginx:
-      image: nginx:latest
-      container_name: nginx
-      ports:
-        - "8197:8197"
-      networks:
-        - mynetwork
-      volumes:
-        - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-        - ./nginx/.htpasswd:/etc/nginx/.htpasswd
-        - ./nginx/index.html:/usr/share/nginx/html/index.html
-      depends_on:
-        - service1-1
-        - service1-2
-        - service1-3
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8197:8197"
+    networks:
+      - mynetwork
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd
+      - ./nginx/index.html:/usr/share/nginx/html/index.html
+    depends_on:
+      - service1-1
+      - service1-2
+      - service1-3
 
-  # webserver:
-  #   image: nginx:latest
-  #   container_name: webserver
-  #   ports:
-  #     - "8198:8198" # Frontend web server
-  #   volumes:
-  #     - ./nginx/web-server.conf:/etc/nginx/nginx.conf
-  #     - ./nginx/index.html:/usr/share/nginx/html/index.html
-
-  # apigateway:
-  #   image: nginx:latest
-  #   container_name: apigateway
-  #   ports:
-  #     - "8197:8197" # API Gateway port
-  #   volumes:
-  #     - ./nginx/api-gateway.conf:/etc/nginx/nginx.conf
-  #     - ./nginx/.htpasswd:/etc/nginx/.htpasswd
-  #   depends_on:
-  #     - service1-1
-  #     - service1-2
-  #     - service1-3
-
-
-  # Database Service (MongoDB)
   db:
     image: mongo:latest
     container_name: mongo-db
@@ -100,11 +77,11 @@ services:
     volumes:
       - mongodb-data:/data/db
     ports:
-      - "27017:27017"  # Expose the database port
+      - "27017:27017"
 
 networks:
   mynetwork:
     driver: bridge
 
 volumes:
-  mongodb-data:  # Create a volume for MongoDB data persistence
+  mongodb-data:
