@@ -1,16 +1,29 @@
 import express from "express";
 import axios from "axios";
 import { getSystemInfo, updateState } from "./utils/utils.js";
-import {
-  getCurrentState,
-  getStateLogs,
-} from "./utils/mongo.js";
+import { getCurrentState, getStateLogs } from "./utils/mongo.js";
 import { initializeState } from "./utils/initializer.js";
+import { STATES, SERVICE2_URL } from "./utils/constants.js";
+import { stopSystem } from "./utils/dockerUtil.js";
 
 const app = express();
 app.use(express.text(), express.json());
 
-const SERVICE2_URL = "http://service2:5000/info";
+app.use(async (req, res, next) => {
+  const currentState = await getCurrentState();
+
+  if (
+    currentState === STATES.PAUSED &&
+    !(req.url === "/state" && req.method === "PUT")
+  ) {
+    return res
+      .status(503)
+      .send("System is in PAUSED state. Please try again later.");
+  }
+
+  console.log(`Received ${req.method} request for ${req.url}`);
+  next();
+});
 
 app.get("/request", async (req, res) => {
   const currentState = await getCurrentState();
@@ -68,12 +81,8 @@ Uptime (seconds): ${service2Info.uptime}
 });
 
 app.post("/stop", async (req, res) => {
-  const currentState = await getCurrentState();
-  if (currentState === "SHUTDOWN") {
-    return res.status(400).send("System is already in SHUTDOWN state.");
-  }
-  startDockerContainers();
   res.status(200).send("Shutting down all services...");
+  stopSystem();
   console.log("Received stop request, shutting down Docker containers.");
 });
 
@@ -141,6 +150,4 @@ const startServer = async () => {
   }
 };
 
-
 startServer();
-
