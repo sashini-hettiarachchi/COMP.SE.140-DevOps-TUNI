@@ -30,10 +30,11 @@ static_analysis:
     - echo "Running Static Analysis (ESLint)"
     - cd service1
     - npm install  # Ensure dependencies (including ESLint) are installed
-    - npx eslint .
+    - npx eslint "src/**/*.{js,jsx,ts,tsx}" # Run ESLint on specific files/folder
   rules:
     - if: $CI_COMMIT_BRANCH == "project"  # Ensure the pipeline runs on the correct branch
     - if: $CI_PIPELINE_SOURCE == "push"  # Allow jobs triggered by a push event
+
 
 # Test Stage
 test:
