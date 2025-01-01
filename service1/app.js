@@ -6,7 +6,8 @@ import { initializeState } from "./utils/initializer.js";
 import { STATES, SERVICE2_URL } from "./utils/constants.js";
 import { stopSystem } from "./utils/dockerUtil.js";
 
-export const app = express();
+const app = express();
+
 app.use(express.text(), express.json());
 
 app.use(async (req, res, next) => {
@@ -143,11 +144,18 @@ app.get("/run-log", async (req, res) => {
 const startServer = async () => {
   try {
     await initializeState();
-    app.listen(8199, () => console.log("Server is running on port 8199"));
+    if (require.main === module) { // This ensures that the server only starts when running the app normally
+      app.listen(8199, () => console.log("Server is running on port 8199"));
+    }
   } catch (error) {
     console.error("Failed to start server:", error);
     setTimeout(startServer, 5000); // Retry on failure
   }
 };
 
-startServer();
+// Export the app for testing purposes
+if (require.main === module) {
+  startServer();
+}
+
+export default app;
