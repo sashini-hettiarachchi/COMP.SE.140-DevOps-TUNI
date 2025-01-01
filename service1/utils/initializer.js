@@ -1,4 +1,3 @@
-import { set } from "mongoose";
 import { connectToDB, acquireLock, getCurrentState, setCurrentState, saveStateChange, releaseLock } from "./mongo.js";
 
 const LOCK_KEY = "initialize_state_lock";

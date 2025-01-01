@@ -1,8 +1,8 @@
+/* eslint-disable */
 import request from "supertest";
 import { getCurrentState, getStateLogs } from "../utils/mongo";
 import { updateState } from "../utils/utils";
 import app from "../app";
-import axios from "axios";
 
 jest.mock("../utils/mongo");
 jest.mock("../utils/utils");

@@ -1,11 +1,11 @@
 stages:
   - build
+  - static_analysis   # New stage for static analysis
   - test
   - cleanup
 
 # Define the base image
 image: node:16  # Use Node.js for building and testing
-
 
 default:
   tags: 
@@ -19,6 +19,18 @@ build:
     - cd service1
     - npm install
     - echo "Build completed successfully!"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "project"  # Ensure the pipeline runs on the correct branch
+    - if: $CI_PIPELINE_SOURCE == "push"  # Allow jobs triggered by a push event
+
+# Static Analysis Stage
+static_analysis:
+  stage: static_analysis  # New stage for static analysis
+  script:
+    - echo "Running Static Analysis (ESLint)"
+    - cd service1
+    - npm install  # Ensure dependencies (including ESLint) are installed
+    - npx eslint . --ext .js,.jsx,.ts,.tsx # Run ESLint on your codebase (modify extensions as needed)
   rules:
     - if: $CI_COMMIT_BRANCH == "project"  # Ensure the pipeline runs on the correct branch
     - if: $CI_PIPELINE_SOURCE == "push"  # Allow jobs triggered by a push event

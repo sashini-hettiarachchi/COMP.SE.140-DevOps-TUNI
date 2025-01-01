@@ -57,6 +57,7 @@ app.get("/request", async (req, res) => {
         disk_space: "Error fetching Service2 disk space",
         uptime: "Error fetching Service2 uptime",
       };
+      console.error("Error fetching Service2 data:", error.message);
     }
 
     // Respond in plain text format
@@ -144,18 +145,13 @@ app.get("/run-log", async (req, res) => {
 const startServer = async () => {
   try {
     await initializeState();
-    if (require.main === module) { // This ensures that the server only starts when running the app normally
-      app.listen(8199, () => console.log("Server is running on port 8199"));
-    }
+    app.listen(8199, () => console.log("Server is running on port 8199"));
   } catch (error) {
     console.error("Failed to start server:", error);
     setTimeout(startServer, 5000); // Retry on failure
   }
 };
 
-// Export the app for testing purposes
-if (require.main === module) {
-  startServer();
-}
+startServer();
 
 export default app;
