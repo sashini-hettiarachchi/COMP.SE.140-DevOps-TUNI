@@ -1,0 +1,16 @@
+{
+    "env": {
+      "es2021": true,
+      "node": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:node/recommended"
+    ],
+    "rules": {
+      "constructor-super": "off",
+      "no-undef": "off",
+      "no-unused-vars": "warn"
+    }
+  }
+  
