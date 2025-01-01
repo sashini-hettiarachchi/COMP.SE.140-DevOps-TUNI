@@ -6,7 +6,7 @@ import { initializeState } from "./utils/initializer.js";
 import { STATES, SERVICE2_URL } from "./utils/constants.js";
 import { stopSystem } from "./utils/dockerUtil.js";
 
-const app = express();
+export const app = express();
 app.use(express.text(), express.json());
 
 app.use(async (req, res, next) => {
