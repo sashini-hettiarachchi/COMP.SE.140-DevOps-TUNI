@@ -16,6 +16,7 @@ beforeAll(() => {
 
 afterAll(() => {
   console.log.mockRestore();
+  app.close();
 });
 
 describe("Express Server Tests", () => {
