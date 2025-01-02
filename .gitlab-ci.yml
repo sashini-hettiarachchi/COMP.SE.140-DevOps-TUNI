@@ -5,7 +5,7 @@ stages:
   - cleanup
 
 # Define the base image
-image: node:16  # Use Node.js for building and testing
+image: node:20  # Use Node.js for building and testing
 
 default:
   tags: 
