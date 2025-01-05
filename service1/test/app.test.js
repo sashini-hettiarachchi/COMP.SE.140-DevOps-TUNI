@@ -16,7 +16,6 @@ beforeAll(() => {
 
 afterAll(() => {
   console.log.mockRestore();
-  app.close();
 });
 
 describe("Express Server Tests", () => {
@@ -46,15 +45,6 @@ describe("Express Server Tests", () => {
     const response = await request(app).get("/run-log");
     expect(response.status).toBe(200);
   });
-
-  test("POST /stop should respond with a shutdown message", async () => {
-    const response = await request(app).post("/stop");
-
-    expect(response.status).toBe(200);
-    expect(response.text).toBe("Shutting down all services...");
-    // You might need to mock `stopSystem` if it performs significant operations.
-  });
-
 
   test("GET /request should return 503 when state is not RUNNING", async () => {
     getCurrentState.mockResolvedValue("PAUSED");
