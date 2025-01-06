@@ -1,3 +1,4 @@
+/* eslint-disable */
 import os from "os";
 import { exec } from "child_process";
 import { getCurrentState, saveStateChange, setCurrentState } from "../utils/mongo.js";
