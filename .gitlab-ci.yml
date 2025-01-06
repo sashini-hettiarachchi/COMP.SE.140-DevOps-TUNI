@@ -44,7 +44,7 @@ test:
     - npm install
   script:
     - echo "Running Tests"
-    - npx jest --detectOpenHandles
+    - npx jest --detectOpenHandles --forceExit
   rules:
     - if: $CI_COMMIT_BRANCH == "project"  # Ensure the pipeline runs on the correct branch
     - if: $CI_PIPELINE_SOURCE == "push"  # Allow jobs triggered by a push event

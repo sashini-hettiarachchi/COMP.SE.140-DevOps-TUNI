@@ -14,17 +14,21 @@ let server;
 
 beforeAll(() => {
   jest.spyOn(console, "log").mockImplementation(() => {});
-  server = app.listen(3000);
+  server = app.listen(3000); // Start server
 });
 
 afterAll(async () => {
-  console.log.mockRestore();
-  await server.close();
+  console.log.mockRestore(); // Restore console log
+  await server.close(); // Close server
+
+  // Ensure no pending timers or mocks
+  jest.clearAllMocks();
+  jest.clearAllTimers();
 });
 
 describe("Express Server Tests", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.clearAllMocks(); // Clear all mocks before each test
   });
 
   test("PUT /state should update the state", async () => {
@@ -53,7 +57,6 @@ describe("Express Server Tests", () => {
     );
   });
 
- 
   test("GET /request should return 503 when state is not RUNNING", async () => {
     getCurrentState.mockResolvedValue("PAUSED");
 
