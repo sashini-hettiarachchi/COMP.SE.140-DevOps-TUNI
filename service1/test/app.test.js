@@ -10,12 +10,16 @@ jest.mock("../utils/initializer", () => ({
   initializeState: jest.fn(() => Promise.resolve()),
 }));
 
+let server;
+
 beforeAll(() => {
   jest.spyOn(console, "log").mockImplementation(() => {});
+  server = app.listen(3000);
 });
 
-afterAll(() => {
+afterAll(async () => {
   console.log.mockRestore();
+  await server.close();
 });
 
 describe("Express Server Tests", () => {
@@ -37,15 +41,19 @@ describe("Express Server Tests", () => {
   });
 
   test("GET /run-log should return state logs", async () => {
-    getStateLogs.mockResolvedValue([
-      "State changed to RUNNING",
-      "State changed to PAUSED",
-    ]);
-
+    getStateLogs.mockResolvedValue(
+      "State changed to RUNNING\nState changed to PAUSED"
+    );
+  
     const response = await request(app).get("/run-log");
+  
     expect(response.status).toBe(200);
+    expect(response.text).toBe(
+      "State changed to RUNNING\nState changed to PAUSED"
+    );
   });
 
+ 
   test("GET /request should return 503 when state is not RUNNING", async () => {
     getCurrentState.mockResolvedValue("PAUSED");
 
@@ -55,5 +63,12 @@ describe("Express Server Tests", () => {
     expect(response.text).toBe(
       "System is in PAUSED state. Please try again later."
     );
+  });
+
+  test("PUT /state should return 400 for invalid input", async () => {
+    const response = await request(app).put("/state").send("").type("text/plain");
+
+    expect(response.status).toBe(400);
+    expect(response.text).toBe("State must be provided.");
   });
 });
